@@ -99,9 +99,4 @@ bash do_eval.sh $test_collection $text_feat_name $video_feat_name $gt_file_name
 CUDA_VISIBLE_DEVICES=0 bash do_eval.sh msrvtt msrvtt1k-test-query msrvtt1k-test msrvtt1k-gt
 ```
 
-
-## Contact
-
-If you encounter any issue when running the code, please feel free to reach us either by creating a new issue in the GitHub or by emailing
-
-- Ruixiang Zhao ([ruixiangzhao@ruc.edu.cn](mailto:ruixiangzhao@ruc.edu.cn))
+The evaluation results will display metrics such as R@1, R@5, R@10, Median Rank, and Mean Rank for both text-to-video and video-to-text retrieval.

@@ -1,6 +1,6 @@
 test_collection=$1
 videoset=$2
-model_name=$3 # $train_collection/Models/$config/run$ID
+model_name=$3 
 
 train_collection=$(echo "$model_name" | cut -d'/' -f1)
 config=$(echo "$model_name" | cut -d'/' -f3)

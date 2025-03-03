@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import os
 from torch.utils.data import Dataset
+import torch
 import numpy as np
 import pandas as pd
 from collections import defaultdict
@@ -122,7 +123,22 @@ class Video_DataLoader(Dataset):
         return video, video_mask
 
     def __getitem__(self, idx):
-        video_id = self.video_ids[idx]
-        video_path = self.video_paths[idx]
-        video, video_mask = self._get_rawvideo([video_id], [video_path])
-        return video_id, video, video_mask
+        try:
+            video_id = self.video_ids[idx]
+            video_path = self.video_paths[idx]
+            
+            if not os.path.exists(video_path):
+                print(f"Warning: Missing video at {video_path}. Skipping...")
+                # Trả về tensor rỗng hoặc giá trị mặc định để không làm crash DataLoader
+                dummy_video = torch.zeros((self.max_frames, 3, self.resolution, self.resolution))
+                dummy_mask = torch.zeros(self.max_frames)
+                return video_id, dummy_video, dummy_mask
+            
+            video, video_mask = self._get_rawvideo([video_id], [video_path])
+            return video_id, video, video_mask
+
+        except IndexError:
+            print(f"IndexError: idx={idx} is out of range.")
+            dummy_video = torch.zeros((self.max_frames, 3, self.resolution, self.resolution))
+            dummy_mask = torch.zeros(self.max_frames)
+            return None, dummy_video, dummy_mask

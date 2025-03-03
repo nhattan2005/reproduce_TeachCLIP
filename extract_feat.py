@@ -88,42 +88,41 @@ def extract_video_feature(args, model, video_dataloader, device):
 
     id_feature_path = os.path.join(args.output_dir, 'id.feature.txt')
     if os.path.exists(id_feature_path):
-    	if args.overwrite:
-        	print('%s exists. overwrite', id_feature_path)
-    	else:
-    		print('%s exists. skip', id_feature_path)
-    		sys.exit(0)
+        if args.overwrite:
+            print('%s exists. overwrite' % id_feature_path)
+        else:
+            print('%s exists. skip' % id_feature_path)
+            sys.exit(0)
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
     open_type = 'w'
     fw = open(id_feature_path, open_type)
 
     with torch.no_grad():
-        # ----------------------------
-        # 1. cache the features
-        # ----------------------------
-        print("***** Extracting video featrures *****")
+        print("***** Extracting video features *****")
         for batch in tqdm(video_dataloader):
             video_ids = batch[0]
+            if video_ids is None or len(video_ids) == 0:
+                continue  # Bỏ qua batch không hợp lệ
+            
             batch = tuple(t.to(device) for t in batch[1:])
             video, video_mask = batch
 
-            # video_features: [batch_size, out_dim]
+            # Trích xuất đặc trưng video
             video_features = model.get_video_output(video, video_mask)
 
-            # write video features to txt file
+            # Ghi kết quả vào file
             video_features_numpy = video_features.cpu().numpy()
             for i in range(len(video_ids)):
                 line = str(video_ids[i]) + ' ' + ' '.join([str(num) for num in video_features_numpy[i, :]]) + '\n'
                 fw.write(line)
     
     fw.close()
-    # transform to bin format
+
     print("***** txt to bin format *****")
-    overwrite = args.overwrite
-    txt2bin.process(0, [id_feature_path], args.output_dir, overwrite)
-    # delete id.feature.txt
+    txt2bin.process(0, [id_feature_path], args.output_dir, args.overwrite)
     os.remove(id_feature_path)
+
 
 def extract_text_feature(args, model, text_dataloader, device):
     model.eval()
@@ -176,10 +175,9 @@ def main():
     set_seed(args)
     device = None
     if torch.cuda.is_available():
-        device = torch.device('cuda:{}'.format(args.local_rank))
+        device = torch.device("cuda:0")
     else:
-        device = torch.device('cpu')
-        raise Error('GPU is not available, infer on cpu is too slow!')
+        raise RuntimeError("CUDA is not available. Please check your GPU setup.")
 
     ## ####################################
     # model loading
